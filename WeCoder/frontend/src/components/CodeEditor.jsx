@@ -1,117 +1,54 @@
-// // import React, { useState, useEffect } from 'react';
-// // import io from 'socket.io-client';
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import io from "socket.io-client";
+import axios from "axios";
 
-// // const socket = io('http://localhost:3000');
-
-// // const CodeEditor = () => {
-// //     const [code, setCode] = useState('// Write your code here...');
-
-// //     useEffect(() => {
-// //         // Receive the initial and subsequent code updates
-// //         socket.on('codeUpdate', (updatedCode) => {
-// //             setCode(updatedCode); // Update local state
-// //         });
-
-// //         // Cleanup socket listener on component unmount
-// //         return () => {
-// //             socket.off('codeUpdate');
-// //         };
-// //     }, []);
-
-// //     const handleCodeChange = (event) => {
-// //         const newCode = event.target.value;
-// //         setCode(newCode); // Update local state
-// //         socket.emit('codeUpdate', newCode); // Emit to the server
-// //     };
-
-// //     return (
-// //         <textarea
-// //             value={code}
-// //             onChange={handleCodeChange}
-// //             rows={20}
-// //             cols={80}
-// //             style={{ fontSize: '16px', fontFamily: 'monospace', width: '100%' }}
-// //         />
-// //     );
-// // };
-
-// // export default CodeEditor;
-// // CodeEditor.jsx
-// import React, { useState, useEffect } from 'react';
-// import io from 'socket.io-client';
-
-// const socket = io('http://localhost:3000');
-
-// const CodeEditor = () => {
-//     const [code, setCode] = useState('// Write your code here...');
-
-//     useEffect(() => {
-//         socket.on('codeUpdate', (updatedCode) => {
-//             setCode(updatedCode);
-//         });
-
-//         return () => {
-//             socket.off('codeUpdate');
-//         };
-//     }, []);
-
-//     const handleCodeChange = (event) => {
-//         const newCode = event.target.value;
-//         setCode(newCode);
-//         socket.emit('codeUpdate', newCode);
-//     };
-
-//     return (
-//         <textarea
-//             value={code}
-//             onChange={handleCodeChange}
-//             rows={20}
-//             cols={80}
-//             style={{ fontSize: '16px', fontFamily: 'monospace', width: '100%' }}
-//         />
-//     );
-// };
-
-// export default CodeEditor;
-import React, { useState, useEffect } from 'react';
-import io from 'socket.io-client';
-import axios from 'axios';
-
-const socket = io('http://localhost:3000');
+const socket = io("http://localhost:3000");
 
 const CodeEditor = () => {
+    const { roomId } = useParams();
     const [code, setCode] = useState('// Write your code here...');
     const [language, setLanguage] = useState('python');
     const [inputData, setInputData] = useState('');
     const [output, setOutput] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Listen for updates from the server
     useEffect(() => {
-        socket.on('codeUpdate', (updatedCode) => {
+        // Connect to the room when component mounts
+        socket.emit('join-room', roomId);
+
+        // Listen for code updates from the server
+        socket.on('code-update', (updatedCode) => {
             setCode(updatedCode);
         });
 
-        socket.on('outputUpdate', (updatedOutput) => {
+        // Listen for output updates from the server
+        socket.on('output-update', (updatedOutput) => {
             setOutput(updatedOutput);
         });
 
+        // Handle disconnection
+        socket.on('disconnect', () => {
+            console.log('Disconnected from the server');
+        });
+
+        // Cleanup on component unmount
         return () => {
-            socket.off('codeUpdate');
-            socket.off('outputUpdate');
+            socket.off('code-update');
+            socket.off('output-update');
+            socket.off('disconnect');
         };
-    }, []);
+    }, [roomId]);
 
     const handleCodeChange = (event) => {
         const newCode = event.target.value;
         setCode(newCode);
-        console.log(newCode);
-        if (socket.connected) {
-            socket.emit('codeUpdate', newCode);
-        } else {
-            console.warn("Socket is not connected.");
-        }
-        
+        // Emit code changes to the server for other users to receive
+        socket.emit('code-change', { roomId, code: newCode });
+    };
+
+    const handleInputChange = (event) => {
+        setInputData(event.target.value);
     };
 
     const handleRunCode = async () => {
@@ -124,11 +61,12 @@ const CodeEditor = () => {
             });
             const result = response.data.output || response.data.error;
             setOutput(result);
-            socket.emit('outputUpdate', result); 
+            // Emit the output update to all users in the room
+            socket.emit('output-change', { roomId, output: result });
         } catch (error) {
             const errorMsg = 'Error while executing code.';
             setOutput(errorMsg);
-            socket.emit('outputUpdate', errorMsg);
+            socket.emit('output-change', { roomId, output: errorMsg });
         } finally {
             setLoading(false);
         }
@@ -137,7 +75,7 @@ const CodeEditor = () => {
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4">
             <header className="text-center mb-4">
-                <h1 className="text-3xl font-bold text-gray-800">Collaborative Code Editor</h1>
+                <h1 className="text-2xl font-bold text-gray-800">Room: {roomId}</h1>
                 <div className="flex items-center mt-4 space-x-4">
                     <select
                         value={language}
@@ -171,35 +109,17 @@ const CodeEditor = () => {
                 />
             </div>
 
-            {language === 'python' && (
-                <div className="mt-4 w-full max-w-4xl">
-                    <label className="block text-gray-600 font-medium mb-2">
-                        Provide Input for input():
-                    </label>
-                    <input
-                        type="text"
-                        value={inputData}
-                        onChange={(e) => setInputData(e.target.value)}
-                        className="w-full p-2 border rounded-md focus:ring focus:ring-indigo-500"
-                        placeholder="Enter input for your program"
-                    />
-                </div>
-            )}
-
-            {language === 'cpp' && (
-                <div className="mt-4 w-full max-w-4xl">
-                    <label className="block text-gray-600 font-medium mb-2">
-                        Provide Input for cin:
-                    </label>
-                    <textarea
-                        rows="5"
-                        value={inputData}
-                        onChange={(e) => setInputData(e.target.value)}
-                        className="w-full p-2 border rounded-md focus:ring focus:ring-indigo-500"
-                        placeholder="Enter input for your program (e.g., 5 10)"
-                    />
-                </div>
-            )}
+            {/* Input Column for user input */}
+            <div className="mt-6 w-full max-w-4xl bg-white p-4 rounded-md shadow-md">
+                <h2 className="text-xl font-semibold text-gray-800 mb-2">Input:</h2>
+                <textarea
+                    value={inputData}
+                    onChange={handleInputChange}
+                    rows={6}
+                    className="w-full p-4 text-sm font-mono bg-white border rounded-md shadow-sm focus:ring focus:ring-indigo-500"
+                    placeholder="Enter input for your code..."
+                />
+            </div>
 
             <div className="mt-6 w-full max-w-4xl bg-white p-4 rounded-md shadow-md">
                 <h2 className="text-xl font-semibold text-gray-800 mb-2">Output:</h2>
@@ -210,4 +130,3 @@ const CodeEditor = () => {
 };
 
 export default CodeEditor;
-

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
-
+import { useParams } from "react-router-dom";
 const socket = io("http://localhost:3000"); // Backend URL
 
 const Whiteboard = () => {
@@ -10,51 +10,57 @@ const Whiteboard = () => {
     const [color, setColor] = useState("black"); // Default color
     const [isErasing, setIsErasing] = useState(false); // Erase mode
     const [eraserSize, setEraserSize] = useState(10); // Eraser size
+    const { roomId } = useParams();
 
     useEffect(() => {
-        // Setup canvas once
+        // Setup canvas
         const canvas = canvasRef.current;
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         const ctx = canvas.getContext("2d");
+
         // Set canvas background color
-    ctx.fillStyle = "black"; // Change this to any background color you prefer
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white"; // Background color
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.lineWidth = 2;
         ctx.lineCap = "round";
         ctxRef.current = ctx;
 
-        // Handle incoming drawing actions
-        socket.on("onpropagate", (action) => {
-            draw(action);
+        // Join the room
+        socket.emit("join-room", roomId);
+
+        // Listen for drawing actions
+        socket.on("onpropagate", ({ room, action }) => {
+            if (room === roomId) {
+                draw(action);
+            }
         });
 
         return () => {
+            socket.emit("leave-room", roomId);
             socket.off("onpropagate");
         };
-    }, []); // Empty dependency array to ensure this runs only once
+    }, [roomId]);
 
-const draw = (action) => {
-  const ctx = ctxRef.current;
+    const draw = (action) => {
+        const ctx = ctxRef.current;
 
-  if (action.type === "start") {
-    ctx.beginPath();
-    ctx.moveTo(action.x, action.y);
-  } else if (action.type === "draw") {
-    ctx.strokeStyle = action.color;
-    ctx.lineWidth = 2; // Default line width
-    ctx.lineTo(action.x, action.y);
-    ctx.stroke();
-  } else if (action.type === "erase" && isErasing) {
-    // Only erase if not already in erase mode
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = action.size; // Eraser size
-    ctx.lineTo(action.x, action.y);
-    ctx.stroke();
-  }
-};
-    
+        if (action.type === "start") {
+            ctx.beginPath();
+            ctx.moveTo(action.x, action.y);
+        } else if (action.type === "draw") {
+            ctx.strokeStyle = action.color;
+            ctx.lineWidth = 2;
+            ctx.lineTo(action.x, action.y);
+            ctx.stroke();
+        } else if (action.type === "erase") {
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = action.size;
+            ctx.lineTo(action.x, action.y);
+            ctx.stroke();
+        }
+    };
 
     const handleMouseDown = (e) => {
         const canvas = canvasRef.current;
@@ -68,7 +74,7 @@ const draw = (action) => {
             ? { type: "erase", x, y, size: eraserSize }
             : { type: "start", x, y };
         draw(action);
-        socket.emit("propagate", action);
+        socket.emit("propagate", { room: roomId, action });
     };
 
     const handleMouseMove = (e) => {
@@ -82,8 +88,8 @@ const draw = (action) => {
         const action = isErasing
             ? { type: "erase", x, y, size: eraserSize }
             : { type: "draw", x, y, color };
-        draw(action);   
-        socket.emit("propagate", action);
+        draw(action);
+        socket.emit("propagate", { room: roomId, action });
     };
 
     const handleMouseUp = () => {
@@ -96,7 +102,7 @@ const draw = (action) => {
                 <button
                     onClick={() => {
                         setIsErasing(false);
-                        ctxRef.current.lineWidth = 2; // Reset line width for drawing
+                        ctxRef.current.lineWidth = 2;
                     }}
                     style={{ marginRight: "10px" }}
                 >
@@ -105,7 +111,7 @@ const draw = (action) => {
                 <button
                     onClick={() => {
                         setIsErasing(true);
-                        ctxRef.current.lineWidth = eraserSize; // Set eraser size
+                        ctxRef.current.lineWidth = eraserSize;
                     }}
                     style={{ marginRight: "10px" }}
                 >
