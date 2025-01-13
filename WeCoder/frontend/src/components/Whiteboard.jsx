@@ -97,50 +97,58 @@ const Whiteboard = () => {
     };
 
     return (
-        <div>
-            <div style={{ marginBottom: "10px" }}>
-                <button
-                    onClick={() => {
-                        setIsErasing(false);
-                        ctxRef.current.lineWidth = 2;
-                    }}
-                    style={{ marginRight: "10px" }}
-                >
-                    Draw
-                </button>
-                <button
-                    onClick={() => {
-                        setIsErasing(true);
-                        ctxRef.current.lineWidth = eraserSize;
-                    }}
-                    style={{ marginRight: "10px" }}
-                >
-                    Erase
-                </button>
-                <input
-                    type="color"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    disabled={isErasing}
-                />
-                <input
-                    type="range"
-                    min="5"
-                    max="50"
-                    value={eraserSize}
-                    onChange={(e) => setEraserSize(e.target.value)}
-                    style={{ marginLeft: "10px" }}
-                    disabled={!isErasing}
-                />
-            </div>
-            <canvas
-                ref={canvasRef}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                style={{ border: "1px solid #000", display: "block" }}
+        <div className="flex flex-col items-center justify-center h-screen p-3">
+        <div className="mb-2 flex items-center justify-center">
+            <button
+                onClick={() => {
+                    setIsErasing(false);
+                    ctxRef.current.lineWidth = 2;
+                }}
+                className="button mr-2 "
+            >
+                Draw
+            </button>
+            <button
+                onClick={() => {
+                    setIsErasing(true);
+                    ctxRef.current.lineWidth = eraserSize;
+                }}
+                className="button mr-2"
+            >
+                Erase
+            </button>
+            <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                disabled={isErasing}
+                className="mr-2"
             />
+           <div className="flex items-center">
+    <label className="mr-1 text-md">Eraser Size :</label>
+    <input
+        type="range"
+        id="eraserSize"
+        min="5"
+        max="50"
+        value={eraserSize}
+        onChange={(e) => setEraserSize(e.target.value)}
+        className="ml-1"
+        disabled={!isErasing}
+    />
+</div>
+
         </div>
+        <canvas
+            ref={canvasRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            className="border border-black block w-full h-full box-border"
+        />
+    </div>
+    
+    
     );
 };
 

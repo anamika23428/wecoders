@@ -14,7 +14,7 @@ const CodeEditor = () => {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        // Connect to the room when component mounts
+        
         socket.emit('join-room', roomId);
 
         // Listen for code updates from the server
@@ -73,14 +73,14 @@ const CodeEditor = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4">
+        <div className="min-h-screen bg-gray-100 flex flex-col items-center p-3">
             <header className="text-center mb-4">
                 <h1 className="text-2xl font-bold text-gray-800">Room: {roomId}</h1>
                 <div className="flex items-center mt-4 space-x-4">
                     <select
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
-                        className="px-4 py-2 border rounded-md focus:ring focus:ring-indigo-500"
+                        className="px-4 py-1 border rounded-md focus:ring focus:ring-indigo-500"
                     >
                         <option value="python">Python</option>
                         <option value="cpp">C++</option>
@@ -89,7 +89,7 @@ const CodeEditor = () => {
                     <button
                         onClick={handleRunCode}
                         disabled={loading}
-                        className={`px-4 py-2 text-white font-bold rounded-md ${
+                        className={`px-4 py-1 text-white font-bold rounded-md ${
                             loading
                                 ? 'bg-indigo-300 cursor-not-allowed'
                                 : 'bg-indigo-500 hover:bg-indigo-600'
@@ -110,7 +110,7 @@ const CodeEditor = () => {
             </div>
 
             {/* Input Column for user input */}
-            <div className="mt-6 w-full max-w-4xl bg-white p-4 rounded-md shadow-md">
+            <div className="mt-2 w-full max-w-4xl bg-white p-4 rounded-md shadow-md">
                 <h2 className="text-xl font-semibold text-gray-800 mb-2">Input:</h2>
                 <textarea
                     value={inputData}
