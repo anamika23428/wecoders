@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import axios from "axios";
-import "../App.css"; // Assuming `app.css` is in the root directory outside `components`
+import "../App.css"; // Ensure this file is correctly linked
 
 const APP_ID = "your-agora-app-id"; // Replace with your Agora App ID
 const SERVER_URL = "http://localhost:5000"; // Your backend server URL
@@ -45,21 +45,33 @@ function VideoCall({ roomID }) {
   }
 
   async function startStream() {
-    const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
-    setLocalTracks(tracks);
+    try {
+      const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+      setLocalTracks(tracks);
 
-    const localPlayer = document.createElement("div");
-    localPlayer.id = `user-${uid}`;
-    localPlayer.className = "video-player";
-    document.getElementById("video-container").appendChild(localPlayer);
-    tracks[1].play(localPlayer);
+      const [audioTrack, videoTrack] = tracks;
 
-    await client.publish(tracks);
-    setStreamStarted(true);
+      // Create video player for local user
+      const localPlayer = document.createElement("div");
+      localPlayer.id = `user-${uid}`;
+      localPlayer.className = "video-player";
+      document.getElementById("video-container").appendChild(localPlayer);
+      
+      videoTrack.play(localPlayer);
+      audioTrack.play(); // Ensure local audio is played
+
+      await client.publish(tracks);
+      console.log("Published audio and video tracks:", tracks);
+
+      setStreamStarted(true);
+    } catch (error) {
+      console.error("Error starting stream:", error);
+    }
   }
 
   async function handleUserJoined(user, mediaType) {
     await client.subscribe(user, mediaType);
+
     setRemoteUsers((prevUsers) => ({ ...prevUsers, [user.uid]: user }));
 
     if (mediaType === "video") {
@@ -68,6 +80,9 @@ function VideoCall({ roomID }) {
       remotePlayer.className = "video-player";
       document.getElementById("video-container").appendChild(remotePlayer);
       user.videoTrack.play(remotePlayer);
+    } else if (mediaType === "audio") {
+      user.audioTrack.play(); // Play remote user's audio
+      console.log(`Audio started for user ${user.uid}`);
     }
   }
 
