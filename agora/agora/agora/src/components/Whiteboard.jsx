@@ -98,7 +98,7 @@ const Whiteboard = () => {
   };
 
   return (
-    <div>
+    <div className="middle">
       <div style={{ marginBottom: "10px" }}>
         <button
           onClick={() => {
