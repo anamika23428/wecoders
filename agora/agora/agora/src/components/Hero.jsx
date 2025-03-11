@@ -1,59 +1,72 @@
-import React, { Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { PerspectiveCamera } from '@react-three/drei';
-import { OrbitControls, useGLTF } from '@react-three/drei';
-// import CanvasLoader from '../components/canvasloader';
-import HackerRoom from '../components/HackerRoom'
-import {Leva,useControls } from 'leva';
-import {useMediaQuery} from 'react-responsive';
-// function Model() {
-//   const { scene } = useGLTF('/hacker-room.glb'); 
-//   return (
-//     <primitive 
-//       object={scene} 
-//       scale={[0.05, 0.05, 0.05]}  
-//       position={[0, 0, 0]} 
-//       rotation={[0, 280, 0]} 
-//     />
-//   );
-// }
+import React, { Suspense } from "react";
+import { Canvas } from "@react-three/fiber";
+import { PerspectiveCamera, useGLTF } from "@react-three/drei";
+import { useControls } from "leva";
+import { useMediaQuery } from "react-responsive";
+import ARoom from "../components/Developer"; // Ensure this is correct
+import { useRef } from "react";
+import { useFrame } from '@react-three/fiber';
+
+const ReactLogo = () => {
+  const { scene } = useGLTF("/models/react.glb"); 
+  const logoRef = useRef();
+
+  // Animation: Rotates the logo slightly
+  useFrame(() => {
+    if (logoRef.current) {
+      logoRef.current.rotation.y += 0.01; // Rotates continuously
+      logoRef.current.rotation.x = Math.sin(performance.now() * 0.001) * 0.2; // Small oscillation
+    }
+  });
+
+  return <primitive ref={logoRef} object={scene} scale={0.3} position={[3.25, 3, 0.5]} />;
+};
+
+// const PythonLogo = () => {  // Capitalized component name
+//   const { scene } = useGLTF("/models/python.glb"); 
+//   const logoRef = useRef();
+
+//   // Animation: Rotates the logo slightly
+//   useFrame(() => {
+//     if (logoRef.current) {
+//       logoRef.current.rotation.y += 0.01; // Rotates continuously
+//       logoRef.current.rotation.x = Math.sin(performance.now() * 0.001) * 0.2; // Small oscillation
+//     }
+//   });
+
+//   return <primitive ref={logoRef} object={scene} scale={0.3} position={[3.25, 3, 0.5]} />;
+// };
 
 const Hero = () => {
-  const x=useControls('HackerRoom',{
-    positionX : {value:0, min:-10, max:10},
-    positionY : {value:2.5, min:-10, max:10},
-    positionZ : {value:2.5, min:-10, max:10},
-    rotationX : {value:2.5, min:-10, max:10},
-    rotationY : {value:2.5, min:-10, max:10}, 
-    rotationZ : {value:2.5, min:-10, max:10},
-    scale:      {value:1, min:0.001, max:1}
+  // Leva Controls for Transformations
+  const x = useControls("RetroCom", {
+    positionX: { value: 0, min: -10, max: 10 },
+    positionY: { value: 2.5, min: -10, max: 10 },
+    positionZ: { value: 2.5, min: -10, max: 10 },
+    rotationX: { value: 0, min: -Math.PI, max: Math.PI },
+    rotationY: { value: 0, min: -Math.PI, max: Math.PI },
+    rotationZ: { value: 0, min: -Math.PI, max: Math.PI },
+    scale: { value: 0.5, min: 0.01, max: 2 },
+  });
 
-  }
-  )
-  const smallerscreen= useMediaQuery({maxWidth:768})
+  const smallerscreen = useMediaQuery({ maxWidth: 768 });
+
   return (
     <section className="w-full min-h-screen" id="home">
-      {/* Animation */}
-     
-      {/* <Leva/> */}
-        <Canvas className="w-full h-full">
-          {/* <Suspense fallback={<CanvasLoader />}> */}
-            <PerspectiveCamera makeDefault position={[0, 0, 10]} />
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[0, 10, 10]} intensity={1.5} />
-            {/* <Model /> */}
-            <HackerRoom
-             scale={x.scale} 
-             position={[x.positionX, x.positionY ,x.positionZ]} 
-             rotation={[x.rotationX, x.rotationY ,x.rotationZ]} 
-            // position={[0,-1.3 ,0.1]}
-            // scale={smallerscreen ? 0.02 :0.03} fro smaller screens
-            // scale={0.03}
-            // rotation={[3.5,5.7,3.1]}
-            />
-            <OrbitControls enableZoom={false} enablePan={true} enableRotate={true} />
-        </Canvas>
-     
+      <Canvas className="w-full h-full">
+        <PerspectiveCamera makeDefault position={[0, 0, 10]} />
+        <ambientLight intensity={2} />
+        <directionalLight intensity={1} position={[10, 10, 10]} />
+        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
+
+        {/* Wrap ARoom & React Logo in Suspense for loading optimization */}
+        <Suspense fallback={null}>
+          <ARoom scale={0.04} position={[0.2, -3.9, 0.3]} rotation={[0.3, 0, 0]} />
+          <ReactLogo />
+          
+          {/* <pythonLogo/> */}
+        </Suspense>
+      </Canvas>
     </section>
   );
 };

@@ -16,9 +16,10 @@ function Room() {
   return (
     <div className="room flex flex-col w-screen h-screen overflow-hidden">
       {/* Navbar */}
-      <div className="navbar bg-[#1E3A8A] text-white text-center py-4 text-xl font-bold">
+      {/* <div className="navbar bg-[#1E3A8A] text-white text-center py-3 text-[8px] font-bold">
+
   <h1>Room {roomId} - {name}</h1>
-</div>
+</div> */}
 
 
       {/* Middle Section with Resizable Panels */}
