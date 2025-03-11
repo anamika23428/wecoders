@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Hero from './Hero.jsx';
+
 function Home() {
   const [roomID, setRoomID] = useState("");
+  const [userName, setUserName] = useState("");
   const navigate = useNavigate();
 
   async function handleCreateRoom() {
@@ -15,7 +17,7 @@ function Home() {
       const data = await response.json();
       console.log(data);
       if (data.roomId) {
-        navigate(`/room/${data.roomId}`);
+        navigate(`/room/${data.roomId}`, { state: { userName } });
       } else {
         alert("Failed to create a room. Try again.");
       }
@@ -30,35 +32,45 @@ function Home() {
       alert("Please enter a Room ID!");
       return;
     }
-    navigate(`/room/${roomID}`);
+    if (!userName) {
+      alert("Please enter your name!");
+      return;
+    }
+    navigate(`/room/${roomID}`, { state: { userName } });
   }
 
   return (
     <div className="flex w-screen overflow-hidden ">
-     <div className="w-1/2 flex flex-col items-center justify-center text-center p-6">
-      <h1 children className="">Agora Call
-      <span className="waving-hand">👋</span>
-      </h1>
+      <div className="w-1/2 flex flex-col items-center justify-center text-center p-6">
+        <h1 className="">Agora Call
+          <span className="waving-hand">👋</span>
+        </h1>
 
-      <input
-        type="text"
-        placeholder="Enter Room ID"
-        value={roomID}
-        onChange={(e) => setRoomID(e.target.value)}
-        style={{ padding: "10px", marginTop: "20px",width: "200px" }}
-      />
-      <br />
+        <input
+          type="text"
+          placeholder="Enter Your Name"
+          value={userName}
+          onChange={(e) => setUserName(e.target.value)}
+          style={{ padding: "10px", marginTop: "20px", width: "200px" }}
+        />
 
-      <button onClick={handleJoinRoom} className="mt-1">
-        Join Room
-      </button>
+        <input
+          type="text"
+          placeholder="Enter Room ID"
+          value={roomID}
+          onChange={(e) => setRoomID(e.target.value)}
+          style={{ padding: "10px", marginTop: "20px", width: "200px" }}
+        />
+        <br />
 
-      <button onClick={handleCreateRoom}>Create Room</button>
-    </div>
+        <button onClick={handleJoinRoom} className="mt-1">
+          Join Room
+        </button>
 
+        <button onClick={handleCreateRoom}>Create Room</button>
+      </div>
 
-
-    <Hero />
+      <Hero />
     </div>
   );
 }

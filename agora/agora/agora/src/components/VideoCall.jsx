@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import axios from "axios";
+import { FaVideo, FaVideoSlash, FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 import "../App.css"; // Ensure this file is correctly linked
 
 const APP_ID = "your-agora-app-id"; // Replace with your Agora App ID
@@ -13,6 +14,8 @@ function VideoCall({ roomID }) {
   const [localTracks, setLocalTracks] = useState([]);
   const [remoteUsers, setRemoteUsers] = useState({});
   const [uid] = useState(Math.floor(Math.random() * 10000));
+  const [videoEnabled, setVideoEnabled] = useState(true);
+  const [audioEnabled, setAudioEnabled] = useState(true);
 
   useEffect(() => {
     client.on("user-published", handleUserJoined);
@@ -56,7 +59,7 @@ function VideoCall({ roomID }) {
       localPlayer.id = `user-${uid}`;
       localPlayer.className = "video-player";
       document.getElementById("video-container").appendChild(localPlayer);
-      
+
       videoTrack.play(localPlayer);
       audioTrack.play(); // Ensure local audio is played
 
@@ -66,6 +69,20 @@ function VideoCall({ roomID }) {
       setStreamStarted(true);
     } catch (error) {
       console.error("Error starting stream:", error);
+    }
+  }
+
+  function toggleVideo() {
+    if (localTracks[1]) {
+      localTracks[1].setEnabled(!videoEnabled);
+      setVideoEnabled(!videoEnabled);
+    }
+  }
+
+  function toggleAudio() {
+    if (localTracks[0]) {
+      localTracks[0].setEnabled(!audioEnabled);
+      setAudioEnabled(!audioEnabled);
     }
   }
 
@@ -116,6 +133,16 @@ function VideoCall({ roomID }) {
             <button onClick={startStream} style={{ marginLeft: "10px" }}>
               Join Stream
             </button>
+          )}
+          {streamStarted && (
+            <>
+              <button onClick={toggleVideo} style={{ marginLeft: "10px" }}>
+                {videoEnabled ? <FaVideo /> : <FaVideoSlash />} Video
+              </button>
+              <button onClick={toggleAudio} style={{ marginLeft: "10px" }}>
+                {audioEnabled ? <FaMicrophone /> : <FaMicrophoneSlash />} Mic
+              </button>
+            </>
           )}
         </>
       ) : (
