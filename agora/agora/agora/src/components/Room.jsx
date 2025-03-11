@@ -1,19 +1,25 @@
 import React from "react";
+import { useLocation } from "react-router-dom";
+
 import { useParams } from "react-router-dom";
 import VideoCall from "./VideoCall";
 import Whiteboard from "./Whiteboard";
 import CodeEditor from "./CodeEditor";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
-function Room({ name }) {
+function Room() {
   const { roomId } = useParams(); // Get room ID from URL
+  const location = useLocation(); // Get state from navigation
+  const name = location.state?.userName || "Guest"; // Default to "Guest" if undefined
 
+ console.log(name)
   return (
     <div className="room flex flex-col w-screen h-screen overflow-hidden">
       {/* Navbar */}
-      <div className="navbar bg-red-500 text-white text-center py-4 text-xl font-bold">
-        <h1>Room {roomId} - {name}</h1>
-      </div>
+      <div className="navbar bg-[#1E3A8A] text-white text-center py-4 text-xl font-bold">
+  <h1>Room {roomId} - {name}</h1>
+</div>
+
 
       {/* Middle Section with Resizable Panels */}
       <PanelGroup direction="horizontal" className="flex-grow overflow-hidden">

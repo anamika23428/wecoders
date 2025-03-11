@@ -14,25 +14,13 @@ const CodeEditor = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Connect to the room when component mounts
     socket.emit("join-room", { roomId });
 
-    // Listen for code updates from the server
-    socket.on("code-update", (updatedCode) => {
-      setCode(updatedCode);
-    });
+    socket.on("code-update", (updatedCode) => setCode(updatedCode));
+    socket.on("output-update", (updatedOutput) => setOutput(updatedOutput));
 
-    // Listen for output updates from the server
-    socket.on("output-update", (updatedOutput) => {
-      setOutput(updatedOutput);
-    });
+    socket.on("disconnect", () => console.log("Disconnected from server"));
 
-    // Handle disconnection
-    socket.on("disconnect", () => {
-      console.log("Disconnected from the server");
-    });
-
-    // Cleanup on component unmount
     return () => {
       socket.off("code-update");
       socket.off("output-update");
@@ -43,13 +31,10 @@ const CodeEditor = () => {
   const handleCodeChange = (event) => {
     const newCode = event.target.value;
     setCode(newCode);
-    // Emit code changes to the server for other users to receive
     socket.emit("code-change", { roomId, code: newCode });
   };
 
-  const handleInputChange = (event) => {
-    setInputData(event.target.value);
-  };
+  const handleInputChange = (event) => setInputData(event.target.value);
 
   const handleRunCode = async () => {
     setLoading(true);
@@ -61,38 +46,37 @@ const CodeEditor = () => {
       });
       const result = response.data.output || response.data.error;
       setOutput(result);
-      // Emit the output update to all users in the room
       socket.emit("output-change", { roomId, output: result });
     } catch (error) {
-      const errorMsg = "Error while executing code.";
-      setOutput(errorMsg);
-      socket.emit("output-change", { roomId, output: errorMsg });
+      setOutput("Error while executing code.");
+      socket.emit("output-change", { roomId, output: "Error while executing code." });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4">
+    <div className="min-h-screen bg-[#121212] text-gray-200 flex flex-col items-center p-6">
+      {/* Room Header */}
       <header className="text-center mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">Room: {roomId}</h1>
+        <h1 className="text-3xl font-bold text-white">Room: {roomId}</h1>
         <div className="flex items-center mt-4 space-x-4">
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="px-4 py-2 border rounded-md focus:ring focus:ring-indigo-500"
+            className="px-4 py-2 bg-[#1E1E1E] text-white border border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
           >
-            <option value="python">Python</option>
-            <option value="cpp">C++</option>
-            <option value="java">Java</option>
+            <option value="python">🐍 Python</option>
+            <option value="cpp">💻 C++</option>
+            <option value="java">☕ Java</option>
           </select>
           <button
             onClick={handleRunCode}
             disabled={loading}
-            className={`px-4 py-2 text-white font-bold rounded-md ${
+            className={`px-4 py-2 text-white font-bold rounded-md transition-all ${
               loading
-                ? "bg-indigo-300 cursor-not-allowed"
-                : "bg-indigo-500 hover:bg-indigo-600"
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 shadow-lg"
             }`}
           >
             {loading ? "Running..." : "Run Code"}
@@ -100,30 +84,32 @@ const CodeEditor = () => {
         </div>
       </header>
 
+      {/* Code Editor */}
       <div className="w-full max-w-4xl">
         <textarea
           value={code}
           onChange={handleCodeChange}
-          rows={20}
-          className="w-full p-4 text-sm font-mono bg-white border rounded-md shadow-sm focus:ring focus:ring-indigo-500"
+          rows={15}
+          className="w-full p-4 text-sm font-mono bg-[#1E1E1E] text-white border border-gray-600 rounded-lg shadow-md focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
-      {/* Input Column for user input */}
-      <div className="mt-6 w-full max-w-4xl bg-white p-4 rounded-md shadow-md">
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">Input:</h2>
+      {/* Input Section */}
+      <div className="mt-6 w-full max-w-4xl bg-[#1E1E1E] p-4 rounded-md shadow-lg border border-gray-600">
+        <h2 className="text-xl font-semibold text-white mb-2">Input:</h2>
         <textarea
           value={inputData}
           onChange={handleInputChange}
-          rows={6}
-          className="w-full p-4 text-sm font-mono bg-white border rounded-md shadow-sm focus:ring focus:ring-indigo-500"
+          rows={4}
+          className="w-full p-3 text-sm font-mono bg-[#282828] text-white border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500"
           placeholder="Enter input for your code..."
         />
       </div>
 
-      <div className="mt-6 w-full max-w-4xl bg-white p-4 rounded-md shadow-md">
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">Output:</h2>
-        <pre className="bg-gray-100 p-4 rounded-md overflow-auto">{output}</pre>
+      {/* Output Section */}
+      <div className="mt-6 w-full max-w-4xl bg-[#1E1E1E] p-4 rounded-md shadow-lg border border-gray-600">
+        <h2 className="text-xl font-semibold text-white mb-2">Output:</h2>
+        <pre className="bg-[#282828] p-4 rounded-md text-white border border-gray-600 overflow-auto">{output}</pre>
       </div>
     </div>
   );
