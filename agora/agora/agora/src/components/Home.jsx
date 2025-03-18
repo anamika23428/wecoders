@@ -13,15 +13,18 @@ function Home() {
       const response = await fetch("http://localhost:5000/create-room", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userName }), // Send username to backend
       });
-
+      
       const data = await response.json();
-      console.log(data);
+      console.log('dtat in rhom' ,data); // { roomId: "...", userName: "..." }
+      
       if (data.roomId) {
-        navigate(`/room/${data.roomId}`, { state: { userName } });
+        navigate(`/room/${data.roomId}/${data.userName}`); // Include username in URL
       } else {
         alert("Failed to create a room. Try again.");
       }
+      
     } catch (error) {
       console.error("Error creating room:", error);
       alert("Error creating room.");
@@ -37,8 +40,9 @@ function Home() {
       alert("Please enter your name!");
       return;
     }
-    navigate(`/room/${roomID}`, { state: { userName } });
+    navigate(`/room/${roomID}/${encodeURIComponent(userName)}`);
   }
+  
 
   return (
     <div className="flex w-screen overflow-hidden ">

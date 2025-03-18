@@ -6,7 +6,7 @@ import axios from "axios";
 const socket = io("http://localhost:5000");
 
 const CodeEditor = () => {
-  const { roomId } = useParams();
+  const { roomId ,userName } = useParams();
   const [code, setCode] = useState("// Write your code here...");
   const [language, setLanguage] = useState("python");
   const [inputData, setInputData] = useState("");
@@ -14,7 +14,7 @@ const CodeEditor = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    socket.emit("join-room", { roomId });
+    socket.emit("join-room", {  roomId , userName});
 
     socket.on("code-update", (updatedCode) => setCode(updatedCode));
     socket.on("output-update", (updatedOutput) => setOutput(updatedOutput));

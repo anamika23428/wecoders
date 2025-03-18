@@ -10,7 +10,7 @@ const Whiteboard = () => {
   const [color, setColor] = useState("black"); // Default color
   const [isErasing, setIsErasing] = useState(false); // Erase mode
   const [eraserSize, setEraserSize] = useState(10); // Eraser size
-  const { roomId } = useParams();
+  const { roomId , userName } = useParams();
 
   useEffect(() => {
     console.log(roomId);
@@ -29,7 +29,7 @@ const Whiteboard = () => {
     ctxRef.current = ctx;
 
     // Join the room
-    socket.emit("join-room", { roomId });
+    socket.emit("join-room", { roomId , userName});
 
     // Listen for drawing actions
     socket.on("onpropagate", ({ room, action }) => {
