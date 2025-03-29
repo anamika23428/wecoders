@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
+import socket from "./socket"; 
 import { useParams } from "react-router-dom";
-const socket = io("http://localhost:5000"); // Backend URL
+
 
 const Whiteboard = () => {
   const canvasRef = useRef(null);
@@ -29,7 +29,7 @@ const Whiteboard = () => {
     ctxRef.current = ctx;
 
     // Join the room
-    socket.emit("join-room", { roomId , userName});
+    // socket.emit("join-room", { roomId , userName});
 
     // Listen for drawing actions
     socket.on("onpropagate", ({ room, action }) => {

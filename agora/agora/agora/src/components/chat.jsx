@@ -1,60 +1,47 @@
 import React, { useState, useEffect, useRef } from "react";
-import io from "socket.io-client";
 import { useParams } from "react-router-dom";
+import socket from "./socket"; // Use the shared socket instance
 
 const Chat = ({ onClose }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [users, setUsers] = useState([]);
-  const socketRef = useRef(null);
-  const { roomId } = useParams(); // Ensure correct key name
+  const { roomId } = useParams();
 
   // Fetch username from sessionStorage (or pass it as a prop from Room)
-  const userName = sessionStorage.getItem("userName");
-
-  // Initialize socket connection
-  useEffect(() => {
-    const socket = io("http://localhost:5000"); // Change to your backend URL
-    socketRef.current = socket;
-
-    socket.emit("join-room", { roomId, userName });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [userName, roomId]); // Correct dependency names
+  const userName = sessionStorage.getItem("userName") || "Guest";
 
   // Listen for messages
   useEffect(() => {
-    const socket = socketRef.current;
-    if (!socket) return;
-
     const handleMessage = (message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
     };
 
     socket.on("message", handleMessage);
-    return () => socket.off("message", handleMessage);
+
+    return () => {
+      socket.off("message", handleMessage);
+    };
   }, []);
 
   // Listen for room users
   useEffect(() => {
-    const socket = socketRef.current;
-    if (!socket) return;
-
     const handleRoomUsers = ({ users }) => {
       setUsers(users);
     };
 
     socket.on("roomusers", handleRoomUsers);
-    return () => socket.off("roomusers", handleRoomUsers);
+
+    return () => {
+      socket.off("roomusers", handleRoomUsers);
+    };
   }, []);
 
   // Handle message submission
   const handleSubmit = (e) => {
     e.preventDefault();
     if (message.trim()) {
-      socketRef.current.emit("chatMessage", { userName, text: message  });
+      socket.emit("chatMessage", { userName, text: message });
       setMessage("");
     }
   };

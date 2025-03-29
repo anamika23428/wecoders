@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import io from "socket.io-client";
 import axios from "axios";
-
-const socket = io("http://localhost:5000");
+import { toast } from "react-toastify"; // ✅ Import Toastify
+import "react-toastify/dist/ReactToastify.css"; // ✅ Import Toastify CSS
+import socket from "./socket";
 
 const CodeEditor = () => {
-  const { roomId ,userName } = useParams();
+  const { roomId, userName } = useParams();
   const [code, setCode] = useState("// Write your code here...");
   const [language, setLanguage] = useState("python");
   const [inputData, setInputData] = useState("");
@@ -14,12 +14,17 @@ const CodeEditor = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    socket.emit("join-room", {  roomId , userName});
+    socket.on("code-update", (updatedCode) => {
+      setCode(updatedCode);
+      
+    });
 
-    socket.on("code-update", (updatedCode) => setCode(updatedCode));
     socket.on("output-update", (updatedOutput) => setOutput(updatedOutput));
 
-    socket.on("disconnect", () => console.log("Disconnected from server"));
+    socket.on("disconnect", () => {
+      console.log("Disconnected from server");
+      toast.error("Disconnected from server!", { autoClose: 3000 });
+    });
 
     return () => {
       socket.off("code-update");
@@ -32,6 +37,7 @@ const CodeEditor = () => {
     const newCode = event.target.value;
     setCode(newCode);
     socket.emit("code-change", { roomId, code: newCode });
+   
   };
 
   const handleInputChange = (event) => setInputData(event.target.value);
@@ -47,9 +53,11 @@ const CodeEditor = () => {
       const result = response.data.output || response.data.error;
       setOutput(result);
       socket.emit("output-change", { roomId, output: result });
+      toast.success("Code executed successfully!", { autoClose: 2000 });
     } catch (error) {
       setOutput("Error while executing code.");
       socket.emit("output-change", { roomId, output: "Error while executing code." });
+      toast.error("Execution failed!", { autoClose: 2000 });
     } finally {
       setLoading(false);
     }

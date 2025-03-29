@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import Hero from './Hero.jsx';
+import { toast } from "react-toastify"; // ✅ Import Toastify
+import "react-toastify/dist/ReactToastify.css"; // ✅ Import Toastify CSS
+import Hero from "./Hero.jsx";
 
 function Home() {
   const [roomID, setRoomID] = useState("");
@@ -9,40 +10,45 @@ function Home() {
   const navigate = useNavigate();
 
   async function handleCreateRoom() {
+    if (!userName.trim()) {
+      toast.warn("Please enter your name before creating a room!");
+      return;
+    }
+
     try {
       const response = await fetch("http://localhost:5000/create-room", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userName }), // Send username to backend
       });
-      
+
       const data = await response.json();
-      console.log('dtat in rhom' ,data); // { roomId: "...", userName: "..." }
-      
+      console.log("Data in room:", data); // { roomId: "...", userName: "..." }
+
       if (data.roomId) {
+        toast.success(`Room ${data.roomId} created successfully!`);
         navigate(`/room/${data.roomId}/${data.userName}`); // Include username in URL
       } else {
-        alert("Failed to create a room. Try again.");
+        toast.error("Failed to create a room. Try again.");
       }
-      
     } catch (error) {
       console.error("Error creating room:", error);
-      alert("Error creating room.");
+      toast.error("Error creating room. Please try again.");
     }
   }
 
   function handleJoinRoom() {
-    if (!roomID) {
-      alert("Please enter a Room ID!");
+    if (!roomID.trim()) {
+      toast.warn("Please enter a Room ID!");
       return;
     }
-    if (!userName) {
-      alert("Please enter your name!");
+    if (!userName.trim()) {
+      toast.warn("Please enter your name!");
       return;
     }
+    toast.success(`Joining Room ${roomID}...`);
     navigate(`/room/${roomID}/${encodeURIComponent(userName)}`);
   }
-  
 
   return (
     <div className="flex w-screen overflow-hidden ">

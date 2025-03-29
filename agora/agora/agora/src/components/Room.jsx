@@ -1,22 +1,45 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { toast } from "react-toastify"; // ✅ Import Toastify
+import "react-toastify/dist/ReactToastify.css"; // ✅ Import Toastify CSS
 import VideoCall from "./VideoCall";
 import Whiteboard from "./Whiteboard";
 import CodeEditor from "./CodeEditor";
 import Chat from "./chat";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import socket from "./socket";
 
 function Room() {
-  const { roomId , userName } = useParams(); // Get room ID from URL
-  const location = useLocation(); // Get state from navigation
+  const { roomId, userName } = useParams();
   const [showChat, setShowChat] = useState(false);
 
-  // Store userName in sessionStorage for persistent access
-  
-  
   useEffect(() => {
-    sessionStorage.setItem("userName", userName); // Ensure it's stored for Chat.js
-  }, [userName]);
+    if (roomId && userName) {
+      socket.emit("join-room", { roomId, userName });
+
+      // ✅ Show toast when user joins
+      toast.success(`You joined room ${roomId}!`);
+    }
+
+    // ✅ Listen for other users joining
+    socket.on("user-joined", (data) => {
+      if (data.userName !== userName) {
+        toast.info(`${data.userName} joined the room.`);
+      }
+    });
+
+    // ✅ Listen for users leaving
+    socket.on("user-left", (data) => {
+      toast.warning(`${data.userName} left the room.`);
+    });
+
+    return () => {
+      socket.emit("leave-room", roomId);
+      toast.error(`You left room ${roomId}.`);
+      socket.off("user-joined");
+      socket.off("user-left");
+    };
+  }, [roomId, userName]);
 
   console.log("User:", userName); // Debugging log
 
