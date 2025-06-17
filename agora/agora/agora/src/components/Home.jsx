@@ -80,8 +80,9 @@ function Home() {
 
         <button onClick={handleCreateRoom}>Create Room</button>
       </div>
-
+      
       <Hero />
+      
     </div>
   );
 }

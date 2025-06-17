@@ -8,7 +8,7 @@ import CodeEditor from "./CodeEditor";
 import Chat from "./chat";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import socket from "./socket";
-
+import ChatbotComponent from "./chatbot";
 function Room() {
   const { roomId, userName } = useParams();
   const [showChat, setShowChat] = useState(false);
@@ -83,6 +83,7 @@ function Room() {
 
       {/* Chat Panel */}
       {showChat && <Chat onClose={() => setShowChat(false)} />}
+         <ChatbotComponent />
     </div>
   );
 }
